@@ -1,0 +1,44 @@
+name: Guardrail Enforcement Agent
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:         # Manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  GITHUB_REPO: ${{ github.repository }}
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install OPA
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/v1.4.2/opa_linux_amd64_static
+          chmod +x opa
+          sudo mv opa /usr/local/bin/
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run enforcement agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          BEDROCK_MODEL_ID: ${{ secrets.BEDROCK_MODEL_ID }}
+        run: |
+          python agent/enforce.py \
+            --scan sample-data/deployed-state.json \
+            --policies policies

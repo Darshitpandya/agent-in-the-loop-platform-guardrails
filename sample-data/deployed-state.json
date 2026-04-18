@@ -1,0 +1,45 @@
+{
+  "resources": [
+    {
+      "id": "payments-svc",
+      "type": "ecs_service",
+      "repo": "acme-org/payments-svc",
+      "tags": [
+        {"key": "team", "value": "payments"}
+      ],
+      "containers": [
+        {"name": "app", "image": "python:3.10-slim"}
+      ],
+      "iam_policy": {
+        "effect": "Allow",
+        "action": ["s3:*"],
+        "resource": "*"
+      },
+      "secrets": [
+        {"name": "DB_PASSWORD", "source": "env_var"}
+      ]
+    },
+    {
+      "id": "orders-svc",
+      "type": "ecs_service",
+      "repo": "acme-org/orders-svc",
+      "tags": [
+        {"key": "team", "value": "commerce"},
+        {"key": "env", "value": "prod"},
+        {"key": "cost-centre", "value": "cc-200"},
+        {"key": "service", "value": "orders-svc"}
+      ],
+      "containers": [
+        {"name": "app", "image": "python:3.12-slim"}
+      ],
+      "iam_policy": {
+        "effect": "Allow",
+        "action": ["s3:GetObject"],
+        "resource": "arn:aws:s3:::orders-*"
+      },
+      "secrets": [
+        {"name": "API_KEY", "source": "secrets_manager"}
+      ]
+    }
+  ]
+}
