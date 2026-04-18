@@ -60,7 +60,7 @@ def _call_bedrock(violations: list[dict], state: dict) -> RemediationPR:
     import boto3
     import instructor
 
-    model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20241022-v2:0")
+    model_id = os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-20250514-v1:0")
 
     bedrock = boto3.client("bedrock-runtime", region_name=os.environ.get("AWS_DEFAULT_REGION", "us-east-1"))
     client = instructor.from_bedrock(bedrock)
