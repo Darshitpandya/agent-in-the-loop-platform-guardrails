@@ -316,18 +316,49 @@ The blueprint uses whatever AWS credentials are in your environment. Production 
 
 **For GitHub Actions:** Use [OIDC federation](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services) instead of storing AWS credentials as secrets.
 
-### Step 8: Adjust the Schedule
+### Step 8: Evolve from Scheduled to Event-Driven (Autonomous)
 
-The blueprint runs every 6 hours. Adjust based on your drift tolerance:
+The blueprint runs on a cron schedule (every 6 hours). This is polling — the agent wakes up, scans, and sleeps. For production, evolve to **event-driven** so the agent reacts to drift the moment it happens:
+
+**Event-driven architecture:**
+
+```
+AWS CloudTrail (config change detected)
+       │
+       ▼
+Amazon EventBridge Rule
+(filter: tag changes, IAM modifications, new deployments)
+       │
+       ▼
+Agent triggered immediately
+(via Lambda or GitHub Actions repository_dispatch)
+       │
+       ▼
+Drift detected in seconds, not hours
+```
+
+**How to implement:**
 
 ```yaml
-# .github/workflows/enforce.yml
-on:
-  schedule:
-    - cron: '0 */6 * * *'   # Every 6 hours (default)
-    # - cron: '0 * * * *'   # Every hour (aggressive)
-    # - cron: '0 8 * * 1-5' # Weekdays at 8 AM (business hours only)
+# EventBridge rule (CloudFormation/Terraform)
+EventRule:
+  Type: AWS::Events::Rule
+  Properties:
+    EventPattern:
+      source: ["aws.ecs", "aws.iam", "aws.ec2"]
+      detail-type: ["AWS API Call via CloudTrail"]
+      detail:
+        eventName:
+          - CreateService
+          - UpdateService
+          - TagResource
+          - UntagResource
+          - PutRolePolicy
+    Targets:
+      - Arn: !GetAtt EnforcementLambda.Arn
 ```
+
+**Start with the schedule. Evolve to event-driven.** The agent pipeline (scan → evaluate → reason → PR) is the same — only the trigger changes.
 
 ---
 
@@ -341,7 +372,7 @@ on:
 - [ ] OTLP exporter configured for your observability backend
 - [ ] Dedicated IAM role with scoped permissions
 - [ ] GitHub Actions uses OIDC federation (no stored AWS credentials)
-- [ ] Schedule adjusted to your drift tolerance
+- [ ] Schedule adjusted to your drift tolerance, or evolved to event-driven (EventBridge)
 - [ ] SLO targets defined and monitored
 
 ---
