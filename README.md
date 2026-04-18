@@ -44,12 +44,12 @@ An autonomous agent that continuously enforces platform guardrails by scanning d
 
 **OPA decides compliance. Bedrock decides remediation. Neither hallucinates in its lane.**
 
-| Component | Role | Deterministic? |
+| Component | Role | Hallucination Risk |
 |---|---|---|
-| OPA (Rego) | "Is this resource compliant?" — pass/fail | ✅ Yes |
-| Amazon Bedrock | "Why did it drift? What's the fix?" — reasoning | ❌ No (constrained by Pydantic schema) |
-| GitHub PR | Surface remediation in developer workflow | ✅ Yes |
-| Human gate | Final approval — always required | ✅ Yes |
+| OPA (Rego) | "Is this resource compliant?" — pass/fail | None — deterministic |
+| Amazon Bedrock | "Why did it drift? What's the fix?" — reasoning | Controlled — output constrained by Pydantic schema, validated before PR creation |
+| GitHub PR | Surface remediation in developer workflow | None — deterministic |
+| Human gate | Final approval — always required | None — human judgment |
 
 ---
 
