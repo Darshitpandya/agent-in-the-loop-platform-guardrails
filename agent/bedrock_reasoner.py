@@ -56,14 +56,15 @@ def reason(violations: list[dict], state: dict, dry_run: bool = False) -> Remedi
 
 
 def _call_bedrock(violations: list[dict], state: dict) -> RemediationPR:
-    """Call Amazon Bedrock via Instructor to generate a structured remediation PR."""
-    import boto3
+    """Call Amazon Bedrock via Anthropic SDK + Instructor for structured reasoning."""
+    import anthropic
     import instructor
 
-    model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-6")
+    region = os.environ.get("AWS_DEFAULT_REGION", "ap-southeast-2")
+    model_id = os.environ.get("BEDROCK_MODEL_ID", "au.anthropic.claude-sonnet-4-6")
 
-    bedrock = boto3.client("bedrock-runtime", region_name=os.environ.get("AWS_DEFAULT_REGION", "ap-southeast-2"))
-    client = instructor.from_bedrock(bedrock)
+    bedrock_client = anthropic.AnthropicBedrock(aws_region=region)
+    client = instructor.from_anthropic(bedrock_client)
 
     prompt = (
         "You are a platform engineering agent. Analyse these OPA policy violations "
@@ -78,9 +79,9 @@ def _call_bedrock(violations: list[dict], state: dict) -> RemediationPR:
         "Output a single PR that fixes all violations."
     )
 
-    return client.chat.completions.create(
+    return client.messages.create(
         model=model_id,
         response_model=RemediationPR,
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=2048,
+        max_tokens=4096,
     )
