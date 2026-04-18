@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Agent-in-the-Loop: Continuous guardrail enforcement agent.
 
+Orchestrator — coordinates the agent pipeline:
+  state_scanner.py → policy_evaluator.py → bedrock_reasoner.py → remediation_pr.py
+
 Usage:
-    python agent/enforce.py --scan sample-data/deployed-state.json
-    python agent/enforce.py --scan sample-data/deployed-state.json --dry-run
+    python agent/orchestrator.py --scan sample-data/deployed-state.json
+    python agent/orchestrator.py --scan sample-data/deployed-state.json --dry-run
 """
 
 import argparse
@@ -16,11 +19,11 @@ from dotenv import load_dotenv
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agent.scanner import scan
-from agent.evaluator import evaluate
+from agent.state_scanner import scan
+from agent.policy_evaluator import evaluate
 from agent.bedrock_reasoner import reason
-from agent.pr_creator import create_pr
-from agent.telemetry import trace_scan
+from agent.remediation_pr import create_pr
+from agent.trace_emitter import trace_scan
 
 
 def main():

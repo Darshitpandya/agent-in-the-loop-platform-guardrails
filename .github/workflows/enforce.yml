@@ -39,6 +39,6 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           BEDROCK_MODEL_ID: ${{ secrets.BEDROCK_MODEL_ID }}
         run: |
-          python agent/enforce.py \
+          python agent/orchestrator.py \
             --scan sample-data/deployed-state.json \
             --policies policies
