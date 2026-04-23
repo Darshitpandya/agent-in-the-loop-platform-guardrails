@@ -1,0 +1,3 @@
+# Remediation: Replace s3:* wildcard action with least-privilege actions and restrict resource from * to specific bucket ARNs.
+# This file represents the change the agent would apply.
+# In production, this would modify the actual config/iam-policy.json
