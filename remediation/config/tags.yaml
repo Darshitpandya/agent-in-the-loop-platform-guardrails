@@ -1,0 +1,3 @@
+# Remediation: Add mandatory tags cost-centre, env, and service alongside the existing team tag.
+# This file represents the change the agent would apply.
+# In production, this would modify the actual config/tags.yaml
