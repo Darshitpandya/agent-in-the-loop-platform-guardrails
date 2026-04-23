@@ -2,7 +2,7 @@
   "resources": [
     {
       "id": "payments-svc",
-      "type": "ecs_service",
+      "type": "service",
       "repo": "acme-org/payments-svc",
       "tags": [
         {"key": "team", "value": "payments"}
@@ -21,7 +21,7 @@
     },
     {
       "id": "orders-svc",
-      "type": "ecs_service",
+      "type": "service",
       "repo": "acme-org/orders-svc",
       "tags": [
         {"key": "team", "value": "commerce"},
