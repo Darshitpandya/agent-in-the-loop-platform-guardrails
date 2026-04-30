@@ -4,6 +4,13 @@ on:
   schedule:
     - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:         # Manual trigger
+    inputs:
+      dry_run:
+        description: 'Use dry-run mode (no Bedrock needed)'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['true', 'false']
 
 permissions:
   contents: write
@@ -39,6 +46,11 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           BEDROCK_MODEL_ID: ${{ secrets.BEDROCK_MODEL_ID }}
         run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
           python agent/orchestrator.py \
             --scan sample-data/deployed-state.json \
-            --policies policies
+            --policies policies \
+            $DRY_RUN_FLAG
