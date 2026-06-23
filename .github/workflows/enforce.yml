@@ -46,9 +46,11 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           BEDROCK_MODEL_ID: ${{ secrets.BEDROCK_MODEL_ID }}
         run: |
-          DRY_RUN_FLAG=""
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            DRY_RUN_FLAG="--dry-run"
+          # Scheduled runs default to dry-run (no AWS secrets required).
+          # Manual trigger can opt into live Bedrock by setting dry_run=false.
+          DRY_RUN_FLAG="--dry-run"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" = "false" ]; then
+            DRY_RUN_FLAG=""
           fi
           python agent/orchestrator.py \
             --scan sample-data/deployed-state.json \
