@@ -73,54 +73,118 @@ A script can scan and report. An agent **reasons and acts**:
 
 ## Quick Start
 
-### Prerequisites
+### Step 1: Install prerequisites
 
-- Python 3.11+
-- [OPA binary](https://www.openpolicyagent.org/docs/latest/#running-opa) installed and on PATH
-- GitHub personal access token with `repo` scope
-- AWS account with Amazon Bedrock access (Claude Sonnet enabled) — only needed for live Bedrock mode
+**Python 3.11+**
+```bash
+python --version  # confirm 3.11+
+```
 
-### Setup
+**OPA binary**
+```bash
+# macOS
+brew install opa
+
+# Linux
+curl -L -o opa https://openpolicyagent.org/downloads/v1.4.2/opa_linux_amd64_static
+chmod +x opa && sudo mv opa /usr/local/bin/
+
+# Verify
+opa version
+```
+
+---
+
+### Step 2: Clone and install
 
 ```bash
 git clone https://github.com/Darshitpandya/agent-in-the-loop-platform-guardrails.git
 cd agent-in-the-loop-platform-guardrails
 
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-cp .env.example .env
-# Edit .env — set GITHUB_TOKEN and GITHUB_REPO at minimum
 ```
 
-### Option A: Dry-Run (No AWS Required — Start Here)
+---
+
+### Step 3: Configure `.env`
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in:
+
+| Variable | Required | Where to get it |
+|---|---|---|
+| `GITHUB_TOKEN` | ✅ Always | GitHub → Settings → Developer settings → Personal access tokens → Generate new token (classic) → select `repo` scope |
+| `GITHUB_REPO` | ✅ Always | Your fork: `YourUsername/agent-in-the-loop-platform-guardrails` |
+| `AWS_ACCESS_KEY_ID` | Option B only | AWS Console → IAM → Users → Security credentials |
+| `AWS_SECRET_ACCESS_KEY` | Option B only | Same as above |
+| `AWS_DEFAULT_REGION` | Option B only | Region where Bedrock Claude Sonnet is enabled (e.g. `us-east-1`, `ap-southeast-2`) |
+| `BEDROCK_MODEL_ID` | Option B only | `us.anthropic.claude-sonnet-4-5` — check your region's [supported models](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html) |
+
+---
+
+### Step 4: Run
+
+#### Option A — Dry-Run (no AWS needed, start here)
 
 ```bash
 python agent/orchestrator.py --scan sample-data/deployed-state.json --dry-run
 ```
 
-Runs the full pipeline — OPA evaluation, PR creation, OTel tracing — using a hardcoded reasoning response instead of Bedrock. **No AWS credentials needed.** The PR created on GitHub is real. This is the recommended starting point to verify the pipeline works end-to-end in your environment.
+Runs the full pipeline end-to-end — OPA evaluation, PR creation, OTel tracing — using a hardcoded reasoning response instead of Bedrock. **Only `GITHUB_TOKEN` and `GITHUB_REPO` required.** The PR created on GitHub is real. Use this to verify your setup before adding AWS credentials.
 
-The scheduled GitHub Actions workflow also runs in dry-run mode by default, so it will pass green without any secrets configured.
+Expected output:
+```
+🛡️  Guardrail Enforcement Agent (scan: abc12345)
+──────────────────────────────────────────────────
+Scanning deployed state: sample-data/deployed-state.json
+├── Resources scanned: 3
+Evaluating OPA policies (policies/)...
+├── base_images.rego: ❌ 1 violation (payments-svc)
+├── iam_scope.rego: ❌ 2 violations (payments-svc)
+...
+Creating remediation PR...
+├── ✅ PR created: https://github.com/your-org/your-repo/pull/1
+```
 
-### Option B: Live Bedrock Mode (Full Agent)
+#### Option B — Live Bedrock (full agent)
+
+Ensure `AWS_*` and `BEDROCK_MODEL_ID` are set in `.env`, then:
 
 ```bash
-# Set in .env:
-# AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, BEDROCK_MODEL_ID
-
 python agent/orchestrator.py --scan sample-data/deployed-state.json
 ```
 
-Full agent loop: scan → evaluate (OPA) → **reason** (Bedrock) → surface PR. Bedrock analyses violations, explains the likely cause, generates specific file changes, and assesses risk. Requires AWS credentials with Bedrock access.
+Bedrock reasons over violations, generates specific file changes, and assesses risk. The PR contains real AI-generated remediation, not the hardcoded dry-run response.
 
-To use live Bedrock in GitHub Actions, add your AWS credentials as repository secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `BEDROCK_MODEL_ID`) and trigger the workflow manually with `dry_run=false`.
+> **AWS prerequisite:** Claude Sonnet must be enabled in your AWS account. Go to AWS Console → Amazon Bedrock → Model access → enable Anthropic Claude Sonnet.
 
-### Run Tests
+---
+
+### Step 5: Run tests
 
 ```bash
 pytest tests/ -v
 ```
+
+All 8 tests should pass. Tests run OPA directly — requires OPA binary on PATH.
+
+---
+
+### Step 6: GitHub Actions setup
+
+The scheduled workflow (every 6 hours) **runs in dry-run mode by default** — no secrets needed, it will pass green immediately after you fork.
+
+To enable live Bedrock in the scheduled workflow:
+
+1. Go to your repo → **Settings → Secrets and variables → Actions → New repository secret**
+2. Add: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `BEDROCK_MODEL_ID`
+3. Trigger manually: **Actions → Guardrail Enforcement Agent → Run workflow → set `dry_run=false`**
+
+
 
 ---
 
