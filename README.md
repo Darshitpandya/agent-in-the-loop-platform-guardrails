@@ -30,30 +30,30 @@ A script can scan and report. An agent **reasons and acts**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     PLATFORM POLICY LAYER                        │
-│   OPA Policies (Rego) — machine-readable, version-controlled    │
-│   "What does compliant look like?"                               │
+│                    PLATFORM POLICY LAYER                        │
+│  OPA Policies (Rego) — machine-readable, version-controlled     │
+│  "What does compliant look like?"                               │
 └──────────────────────────────┬──────────────────────────────────┘
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     AGENT-IN-THE-LOOP                            │
-│                     (Platform Primitive)                         │
-│                                                                  │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌───────────┐ │
-│  │   SCAN     │  │  EVALUATE  │  │   REASON   │  │  SURFACE  │ │
-│  │  Deployed  │─▶│    OPA     │─▶│  Bedrock   │─▶│  GitHub   │ │
-│  │   state    │  │ pass/fail  │  │  why+fix   │  │  PR API   │ │
-│  └────────────┘  └────────────┘  └────────────┘  └───────────┘ │
-│                                                                  │
-│  OpenTelemetry traces every step  │  Operated with SLOs         │
+│                    AGENT-IN-THE-LOOP                            │
+│                    (Platform Primitive)                         │
+│                                                                 │
+│  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌──────────┐      │
+│  │   SCAN    │  │ EVALUATE  │  │  REASON   │  │ SURFACE  │      │
+│  │ Deployed  │─▶│   OPA     │─▶│ Bedrock   │─▶│  GitHub  │      │
+│  │  state    │  │ pass/fail │  │ why+fix   │  │  PR API  │      │
+│  └───────────┘  └───────────┘  └───────────┘  └──────────┘      │
+│                                                                 │
+│  OpenTelemetry traces every step  |  Operated with SLOs         │
 └──────────────────────────────┬──────────────────────────────────┘
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     DEVELOPER WORKFLOW                           │
-│   PR in the service repo → developer reviews → merges           │
-│   Same workflow. Same review. No new tool. Human gate always.   │
+│                    DEVELOPER WORKFLOW                           │
+│  PR in the service repo → developer reviews → merges            │
+│  Same workflow. Same review. No new tool. Human gate always.    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
