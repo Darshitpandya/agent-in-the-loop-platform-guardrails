@@ -39,8 +39,9 @@ def create_pr(remediation: RemediationPR) -> str | None:
                 content=f"# Remediation: {file_change.description}\n# This file represents the change the agent would apply.\n# In production, this would modify the actual {file_change.path}\n",
                 branch=branch_name,
             )
-        except GithubException:
-            pass  # File may already exist
+        except GithubException as e:
+            if e.status != 422:  # 422 = file already exists
+                raise
 
     # Create the PR
     pr = repo.create_pull(

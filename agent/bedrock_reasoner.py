@@ -89,9 +89,14 @@ def _call_bedrock(violations: list[dict], state: dict) -> RemediationPR:
         "Output a single PR that fixes all violations."
     )
 
-    return client.messages.create(
-        model=model_id,
-        response_model=RemediationPR,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=4096,
-    )
+    try:
+        return client.messages.create(
+            model=model_id,
+            response_model=RemediationPR,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=4096,
+        )
+    except Exception as e:
+        print(f"  ⚠️  Bedrock call failed: {e}")
+        print("  ℹ️  Falling back to dry-run response. Re-run with --dry-run to suppress this warning.")
+        return _DRY_RUN_RESPONSE
